@@ -38,29 +38,32 @@
         <form @submit.prevent="add">
           <div class="group">
             <label>Title</label>
-            <input type="text">
+            <input
+                type="text"
+                v-model="newRecipe.title"
+            >
           </div>
 
           <div class="group">
             <label>Description</label>
-            <textarea />
+            <textarea
+                v-model="newRecipe.description"
+            />
           </div>
 
           <div
               class="group"
-              v-for="ingredient in newRecipe.ingredientRows"
-              :key="ingredient"
           >
             <label>Ingredients</label>
-            <div class="ingredient">
-              <input type="text">
-            </div>
-          </div>
-
-          <div class="group">
-            <label>Method</label>
-            <div class="method">
-              <textarea/>
+            <div
+                class="ingredient"
+                v-for="ingredient in newRecipe.ingredientRows"
+                :key="ingredient"
+            >
+              <input
+                  type="text"
+                  v-model="newRecipe.ingredients[ingredient - 1]"
+              >
             </div>
 
             <button
@@ -73,10 +76,13 @@
 
           <div class="group">
             <label>Method</label>
-            <div class="method">
-              <textarea/>
+            <div
+                class="method"
+                v-for="i in newRecipe.methodRows"
+                :key="i"
+            >
+              <textarea v-model="newRecipe.method[i - 1]"/>
             </div>
-
             <button
                 type="button"
                 @click="addNewStep"
@@ -103,7 +109,7 @@
 
 <script>
 
-import {computed, ref} from "vue";
+import {computed, onMounted, ref } from "vue";
 import {useStore} from "vuex";
 
 export default {
@@ -124,12 +130,36 @@ export default {
 
     const popupOpen = ref(false);
 
-    const togglePopup = () => popupOpen.value = !popupOpen.value;
+    const togglePopup = () => {
+      popupOpen.value = !popupOpen.value;
+      newRecipe.value = {
+        title: '',
+        description: '',
+        ingredients: [],
+        method: [],
+        ingredientRows: 1,
+        methodRows: 1,
+      }
+    };
 
     const add = () => {
-      store.commit('addRecipe', newRecipe);
+
+      if(!newRecipe.value.title) {
+        alert('Please, enter the title!');
+        return;
+      }
+
+      newRecipe.value.slug =  newRecipe.value.title.toLowerCase().replace(/\s/g, '-');
+
+      store.commit('addRecipe', newRecipe.value);
+      localStorage.setItem('my_recipes', JSON.stringify(recipes.value));
       togglePopup();
     }
+
+    onMounted(() => {
+      store.commit('setRecipesOfSaved',
+          JSON.parse(localStorage.getItem('my_recipes')) || [])
+    })
 
     const addNewIngredient = () => newRecipe.value.ingredientRows += 1;
     const addNewStep = () => newRecipe.value.methodRows += 1;
@@ -193,7 +223,10 @@ h1 {
   padding: 2rem;
   border-radius: 1rem;
   width: 100%;
+  height: auto;
+  max-height: 100%;
   max-width: 768px;
+  overflow: auto;
 }
 .popup-content h2 {
   font-size: 2rem;

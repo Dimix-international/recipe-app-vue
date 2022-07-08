@@ -1,10 +1,35 @@
 <template>
-  <div>recepi</div>
+  <div class="recipe">
+    <router-link to="/">
+      &lt; Back
+    </router-link>
+    <div v-if="recipe">
+      dwadw
+      <h1>{{recipe.title}}</h1>
+    </div>
+  </div>
 </template>
 
 <script>
+import {useStore} from "vuex";
+import {useRoute} from "vue-router/dist/vue-router";
+import {onMounted, ref} from "vue";
+
 export default {
-  name: "RecipePage"
+  name: "RecipePage",
+  setup() {
+    const store = useStore();
+    const route = useRoute();
+    const recipe = ref(null);
+
+    onMounted(() => {
+      recipe.value = store.state.recipes.find(r => r.slug === route.params.slug);
+    });
+
+    return {
+      recipe
+    }
+  }
 }
 </script>
 
